@@ -17,7 +17,6 @@ RESULTS_FILE = output_dir + f'ratings_analysis_t_test_results_{timestamp}.tsv'
 if __name__ == "__main__":
 
     apps = pd.read_csv(INPUT_FILE, sep='\t')
-    apps = apps[apps.category != 'Period Trackers']
 
     feature_cols = ['Affirmations/Inspiration', 'Assessment',
         'Educational Content', 'Games', 'Journaling', 'Meditation',
