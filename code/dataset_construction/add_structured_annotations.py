@@ -118,11 +118,6 @@ if __name__ == "__main__":
         print(f'Subsetted data to {len(data)} rows labeled as Mental Health.')
 
         data.reset_index(drop=True, inplace=True)
-    
-        print('WARNING: Sampling data for testing purposes...')
-        data = data.sample(23)
-
-    data.head()
 
     # ------------------- PROCESS IN BATCHES -------------------
     results = []
