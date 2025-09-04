@@ -119,8 +119,7 @@ if __name__ == "__main__":
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    # Check if a GPU is available and move the model to the GPU
-   
+    # Move the model to the GPU if available 
     model.to(device)
 
     output = prompt_model("Hello, how are you?", max_tokens=5, verbose=True)
