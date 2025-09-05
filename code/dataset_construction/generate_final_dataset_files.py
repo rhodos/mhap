@@ -4,9 +4,9 @@ import os
 import code.utils as utils
 
 # --- Configuration ---
-WRITE_FLAT_FILE = True
-WRITE_STAR_SCHEMA_FILES = True
-REBUILD_DB = True
+WRITE_FLAT_FILE = False
+WRITE_STAR_SCHEMA_FILES = False
+REBUILD_DB = False
 
 if not (WRITE_FLAT_FILE or WRITE_STAR_SCHEMA_FILES or REBUILD_DB):
     raise ValueError("At least one of WRITE_FLAT_FILE, WRITE_STAR_SCHEMA_FILES, or REBUILD_DB must be True")
@@ -19,9 +19,11 @@ FLAT_FILE = os.path.join(OUTPUT_DIR, "mental_health_apps_wide_format.tsv")
 STAR_DIR = os.path.join(OUTPUT_DIR, "star_schema")
 os.makedirs(STAR_DIR, exist_ok=True)
 
-def split_and_join_multilabels(df, column_name, suffix=""):
+def split_and_join_multilabels(df, column_name, suffix="", drop_original=False):
     df_split = df[column_name].str.get_dummies(sep=", ").astype(bool)
     df = df.join(df_split, rsuffix=suffix)
+    if drop_original:
+        df.drop(columns=[column_name], inplace=True)
     return df
 
 def create_bridge_and_dim_tables(df, column_name):
@@ -139,7 +141,7 @@ def build_sqlite_db(data, db_filename=SQL_FILE):
 
     for data_name, df in data.items():
         print(f"Inserting {data_name} data...")
-        df.to_sql(data_name, sql_conn, if_exists="append", index=False)
+        df.to_sql(data_name, sql_conn, if_exists="replace", index=False)
 
     sql_conn.close()
 
@@ -150,9 +152,6 @@ if __name__ == "__main__":
 
     apps.columns = apps.columns.str.lower()
 
-    # filter out period trackers
-    apps = apps[apps.category != "Period Trackers"]
-
     # Create a single-table version just flattening the multi-label values into boolean columns
     if WRITE_FLAT_FILE:
         print("Writing flat file...")
@@ -160,13 +159,11 @@ if __name__ == "__main__":
         apps_wide = split_and_join_multilabels(apps_wide, "features", suffix="_feature")
         apps_wide = split_and_join_multilabels(apps_wide, "indications", suffix="_indication")
         apps_wide = split_and_join_multilabels(apps_wide, "demographics", suffix="_demographic")
-        apps_wide.to_csv(FLAT_FILE, sep="\t")
+        apps_wide.to_csv(FLAT_FILE, sep="\t", header=True, index=False)
     else:
         print("Not writing flat file")
 
-    apps.rename(columns={"id": "app_id"}, inplace=True)
-    columns_to_keep = ["app_id", "cluster", "silhouette_score", "auto_cluster_category", "category", "name", "rating", "company", "url", "description", "downloads", "updated", "features", "demographics", "indications"]
-    apps = apps[columns_to_keep]
+    # --- Create star schema tables --- 
     apps.index = apps["app_id"]
 
     data = dict()
@@ -185,9 +182,9 @@ if __name__ == "__main__":
     category_dim.set_index("category_id", inplace=True, drop=False)
     data["categories"] = category_dim
 
-    # Add reference to Category_ID into main Apps table
+    # Add reference to category_id in main apps table
     apps = apps.merge(category_dim, on="category", how="left")
-    apps.drop(columns=["features", "demographics", "indications", "cluster", "silhouette_score", "auto_cluster_category", "category"], inplace=True,)
+    apps.drop(columns=["features", "demographics", "indications", "category"], inplace=True,)
 
     data["apps"] = apps
 

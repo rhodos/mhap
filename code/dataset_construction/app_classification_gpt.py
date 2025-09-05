@@ -9,11 +9,13 @@ gpt_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 model = "gpt-4.1-mini"
 DEBUG = True
 
+if DEBUG:
+    print("WARNING: DEBUG mode is ON. Only a subset of data will be processed.")
+
 
 def get_first_k_lines(text, k):
     lines = text.split("\n")
     return " ".join(lines[:k])
-
 
 def construct_prompt(data_point):
     title = data_point["title"]

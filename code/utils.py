@@ -1,9 +1,6 @@
 import os
-#from datetime import datetime
 from dotenv import load_dotenv
 
-#def get_timestamp():
-#    return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 def get_base_dir():
     load_dotenv()
@@ -20,8 +17,7 @@ def get_data_dir(step=None):
     """
     base_dir = get_base_dir()
     if base_dir:
-        base_data_dir = os.path.join(base_dir, 'newdata')
-        print('WARNING: Using newdata directory')
+        base_data_dir = os.path.join(base_dir, 'data')
     else:
         print("WARNING: BASE_DIR not set in environment variables, returning None for base_data_dir")
         base_data_dir = None
