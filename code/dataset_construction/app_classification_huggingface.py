@@ -6,7 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSeq2Se
 import torch
 from huggingface_hub import login
 
-import os
+import code.utils as utils
 
 preamble = f"""
 You are a mental health app classifier. Your task is to categorize an app (based on its title and description) as either 'Mental Health' or 'Not Mental Health'. Apps involving talk therapy, coaching, mood tracking, or CBT training should be categorized as 'Mental Health'. You can also look for keywords and phrases like 'Cognitive Behavioral Therapy', 'Mental Well-Being', etc. as indicators that they should be labeled as 'Mental Health'.
@@ -89,10 +89,10 @@ def prompt_model(prompt, max_tokens=10, device=device, verbose=True):
 if __name__ == "__main__":
 
     # Load the data
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_path = script_dir + "/../../data/step3_llm_annotations/validation_data.tsv"
+    data_dir = utils.get_data_dir()
+    data_file = os.path.join(data_dir, "step3_app_classification", "validation_data.tsv")
 
-    data = pd.read_csv(data_path, sep="\t")
+    data = pd.read_csv(data_file, sep="\t")
     data = data[["title", "description", "label"]]
 
     # Extract 30 samples to use as test data, 4 for in-context examples
