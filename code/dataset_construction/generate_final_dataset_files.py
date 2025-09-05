@@ -1,3 +1,7 @@
+"""
+Generates final dataset files in various formats: flat file, star schema files, and SQLite database.
+Saves outputs to the data/out directory.
+"""
 import pandas as pd
 import sqlite3
 import os
@@ -20,6 +24,13 @@ STAR_DIR = os.path.join(OUTPUT_DIR, "star_schema")
 os.makedirs(STAR_DIR, exist_ok=True)
 
 def split_and_join_multilabels(df, column_name, suffix="", drop_original=False):
+    """
+    Splits a column with multi-label string values (comma-separated) into multiple boolean columns.
+    For example, a column "features" with values like "Meditation, Journaling"
+    will be split into two columns "Meditation" and "Journaling" with boolean values.
+
+    Returns an updated dataframe with the new boolean columns added.
+    """
     df_split = df[column_name].str.get_dummies(sep=", ").astype(bool)
     df = df.join(df_split, rsuffix=suffix)
     if drop_original:
@@ -27,6 +38,11 @@ def split_and_join_multilabels(df, column_name, suffix="", drop_original=False):
     return df
 
 def create_bridge_and_dim_tables(df, column_name):
+    """
+    Creates bridge and dimension tables for a multi-label column in the dataframe. For example, for a column "features" with values like "Meditation, Journaling", it creates a bridge table "app_features" linking app_id to feature_id with multiple rows per app, one for each feature annotated to that app. It also creates a dimension table "features" with unique feature names and their IDs.
+
+    Returns the bridge and dimension dataframes.
+    """
 
     dimname = column_name[:-1]
     dim_id = f"{dimname}_id"
@@ -58,6 +74,9 @@ def create_bridge_and_dim_tables(df, column_name):
 
 
 def build_sqlite_db(data, db_filename=SQL_FILE):
+    """
+    Builds a SQLite database with the given data tables. The data argument should be a dictionary with table names as keys and pandas DataFrames as values. If the database file already exists, it will be overwritten.
+    """
 
     sql_conn = sqlite3.connect(db_filename)
 

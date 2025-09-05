@@ -1,3 +1,6 @@
+"""
+Performs t-tests to analyze whether apps with certain features, target demographics, or indications have significantly different user ratings compared to apps without those attributes.
+"""
 import pandas as pd
 from scipy import stats
 import os

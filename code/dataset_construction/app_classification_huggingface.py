@@ -1,3 +1,8 @@
+"""
+Classifies apps as Mental Health or Not Mental Health using a Hugging Face model with in-context learning.
+(Note that this was not used in the final dataset due to performance considerations.)
+"""
+
 import pandas as pd
 import numpy as np
 import os

@@ -1,3 +1,8 @@
+"""
+Clusters mental health apps based on their names, descriptions and structured labels using TF/IDF with K-Means clustering.
+Saves the clustered apps and cluster metadata to TSV files.
+"""
+
 import pandas as pd
 import numpy as np
 import os
@@ -19,6 +24,10 @@ OUTPUT_CLUSTER_INFO_FILE = os.path.join(OUTPUT_DIR, 'cluster_info.tsv')
 
 
 def safe_literal_eval(x):
+    """
+    Safely evaluates a string representation of a Python literal (like a list).
+    If the input is not a string or cannot be evaluated, returns an empty list.
+    """
     if isinstance(x, str):
         try:
             return ast.literal_eval(x)

@@ -3,6 +3,10 @@ from dotenv import load_dotenv
 
 
 def get_base_dir():
+    """
+    Returns the base directory from the BASE_DIR environment variable.
+    If BASE_DIR is not set in environment variables, returns None.
+    """
     load_dotenv()
     base_dir = os.getenv("BASE_DIR")
     if not base_dir:
@@ -39,6 +43,9 @@ def get_data_dir(step=None):
     return data_dir
 
 def get_out_dir():
+    """
+    Returns the output directory inside the data directory, creating it if necessary.
+    """
     data_dir = get_data_dir()
     if data_dir:
         out_dir = os.path.join(data_dir, "out")

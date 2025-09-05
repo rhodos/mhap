@@ -1,3 +1,8 @@
+"""
+Classifies apps using GPT-4.1-mini and appends AI-generated labels to the dataset.
+Saves the labeled dataset to a TSV file.
+"""
+
 import pandas as pd
 import numpy as np
 import os
@@ -14,10 +19,16 @@ if DEBUG:
 
 
 def get_first_k_lines(text, k):
+    """
+    Returns the first k lines of the given text.
+    """
     lines = text.split("\n")
     return " ".join(lines[:k])
 
 def construct_prompt(data_point):
+    """
+    Constructs a prompt for the given data point, using the title and first 4 lines of the description.
+    """
     title = data_point["title"]
     description = get_first_k_lines(data_point["description"], k=4)
     preamble = "Classify the following app as 'Mental Health', 'Not Mental Health', or 'Unclear/Borderline' based on its title and the first few lines of its description. Apps with journals or mood trackers can be considered Mental Health. A sleep support app that just focuses on white noise would not be considered Mental Health, but if it includes guided meditations or mantras, it would. Just output the classification without any further discussion."
@@ -30,6 +41,9 @@ def construct_prompt(data_point):
 
 
 def prompt_model(prompt, model, verbose=True):
+    """
+    Prompts the model with the given prompt and returns the output text.
+    """
     if verbose:
         print("PROMPT:\n", prompt)
     response = gpt_client.responses.create(model=model, input=prompt)
@@ -39,10 +53,17 @@ def prompt_model(prompt, model, verbose=True):
 
 
 def get_data_point(data, index):
+    """
+    Returns the data point at the given index as a dictionary.
+    """
     return dict(data.iloc[index])
 
 
 def generate_metrics_and_predictions(data, verbose=True, debug=False):
+    """
+    Generates predictions for the given data and computes accuracy metrics.
+    Returns a dictionary of metrics and a DataFrame of predictions.
+    """
     predictions = pd.DataFrame(columns=["prediction", "label"])
     
     if debug:
@@ -76,6 +97,9 @@ def generate_metrics_and_predictions(data, verbose=True, debug=False):
 
 
 def label_data(data):
+    """
+    Labels the given data using the model and returns the DataFrame with a new 'prediction' column.
+    """
     if "prediction" not in data.columns:
         data["prediction"] = None
 

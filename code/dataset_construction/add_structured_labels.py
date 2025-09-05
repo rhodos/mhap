@@ -1,3 +1,8 @@
+"""
+Adds structured labels (features, target demographics, indications) to mental health apps using GPT-4o-mini.
+Saves the labeled dataset to TSV files for analysis and Google Sheets upload.
+"""
+
 import pandas as pd
 import json
 import os
@@ -11,7 +16,6 @@ MODEL_NAME = "gpt-4o-mini"
 BATCH_SIZE = 20
 
 DEBUG = True
-
 if DEBUG:
     print("WARNING: DEBUG mode is ON. Only a subset of data will be processed.")
 
