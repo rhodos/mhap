@@ -1,14 +1,13 @@
 import pandas as pd
 import numpy as np
 import os
-
 from tqdm.auto import tqdm
-from datetime import datetime
-
 from openai import OpenAI
+import code.utils as utils
 
 gpt_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 model = "gpt-4.1-mini"
+DEBUG = True
 
 
 def get_first_k_lines(text, k):
@@ -41,8 +40,13 @@ def get_data_point(data, index):
     return dict(data.iloc[index])
 
 
-def generate_metrics_and_predictions(data, verbose=True):
+def generate_metrics_and_predictions(data, verbose=True, debug=False):
     predictions = pd.DataFrame(columns=["prediction", "label"])
+    
+    if debug:
+        print('Debug mode: sampling 10 data points')
+        data = data.sample(10, random_state=42).reset_index(drop=True)
+    
     for i in range(len(data)):
         if verbose:
             print("DATA POINT ", i)
@@ -86,16 +90,16 @@ def label_data(data):
 
 if __name__ == "__main__":
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = script_dir + "/../../data/step3_llm_annotations/"
+    data_dir = utils.get_data_dir(3)
+    valid_file = os.path.join(data_dir, "validation_data.tsv")
 
-    val_data = pd.read_csv(data_dir + "validation_data.tsv", sep="\t")
+    val_data = pd.read_csv(valid_file, sep="\t")
     val_metrics, val_predictions = generate_metrics_and_predictions(
-        val_data, verbose=True
-    )
+        val_data, verbose=True, debug=DEBUG)
     print(val_metrics)
 
-    data = pd.read_csv(data_dir + "all_data_manual_labels.tsv", sep="\t")
+    input_file = os.path.join(data_dir, "app_data_plus_manual_labels.tsv")
+    data = pd.read_csv(input_file, sep="\t")
     data.rename(
         columns={
             "Mental Health": "label",
@@ -111,6 +115,9 @@ if __name__ == "__main__":
     # columns= ['title', 'description', 'label', 'prediction']
     # labeled_sample[columns]
 
+    if DEBUG:
+        data = data.sample(20, random_state=42)
+
     labeled_data = label_data(data)
 
     manual_labels = labeled_data[
@@ -121,6 +128,6 @@ if __name__ == "__main__":
 
     labeled_data["ID"] = range(1, len(labeled_data) + 1)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_filename = f"labeled_data_{timestamp}.tsv"
-    labeled_data.to_csv(data_dir + output_filename, sep="\t", header=True, index=False)
+    outdir = utils.get_out_dir()
+    outfile = os.path.join(outdir, "app_data_plus_ai_labels.tsv")
+    labeled_data.to_csv(outfile, sep="\t", header=True, index=False)
