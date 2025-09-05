@@ -1,19 +1,19 @@
 import pandas as pd
 import sqlite3
-from datetime import datetime
 import os
+import code.utils as utils
 
 # --- Configuration ---
 WRITE_FLAT_FILE = True
-WRITE_STAR_SCHEMA_FILES = False
-REBUILD_DB = False
+WRITE_STAR_SCHEMA_FILES = True
+REBUILD_DB = True
 
 # --- Directory setup ---
-script_dir = os.path.dirname(os.path.abspath(__file__))
-input_dir = script_dir + "/../../data/step5_final_dataset/single_table/"
+data_dir = utils.get_data_dir()
+input_dir = data_dir + "/step5_final_dataset/single_table/"
 
-TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
-OUTPUT_DIR = script_dir + "/../../data/step5_final_dataset/"
+TIMESTAMP = utils.get_timestamp()
+OUTPUT_DIR = data_dir + "/step5_final_dataset/"
 INPUT_FILE = input_dir + "mental_health_apps_from_sheets.tsv"
 
 SQL_FILE = OUTPUT_DIR + "sqlite/" + f"mhap_{TIMESTAMP}.db"
