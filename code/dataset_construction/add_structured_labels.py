@@ -164,7 +164,7 @@ if __name__ == "__main__":
     # Merge results back into DataFrame
     results_df = pd.DataFrame(results)
     df_final = data.merge(results_df, on="id", how="left")
-    df_final.drop(columns=['Unnamed: 20'], inplace=True)
+    #df_final.drop(columns=['Unnamed: 20'], inplace=True)
 
     # Save version for Python analysis
     df_final.to_csv(OUTPUT_FILE, sep='\t', index=False)

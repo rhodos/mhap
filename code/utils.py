@@ -20,7 +20,8 @@ def get_data_dir(step=None):
     """
     base_dir = get_base_dir()
     if base_dir:
-        base_data_dir = os.path.join(base_dir, 'data')
+        base_data_dir = os.path.join(base_dir, 'newdata')
+        print('WARNING: Using newdata directory')
     else:
         print("WARNING: BASE_DIR not set in environment variables, returning None for base_data_dir")
         base_data_dir = None

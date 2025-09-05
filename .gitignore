@@ -5,6 +5,10 @@
 
 # Project-specific files
 data/out/
+newdata/
+*.ipynb
+*.ipynb_checkpoints
+
 
 # User-specific files
 *.rsuser
