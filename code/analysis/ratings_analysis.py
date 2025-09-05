@@ -1,18 +1,15 @@
 import pandas as pd
 from scipy import stats
-import numpy as np
-from datetime import datetime
 import os
 
 from statsmodels.sandbox.stats.multicomp import multipletests
 
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-script_dir = os.path.dirname(os.path.abspath(__file__))
-input_dir = script_dir + "/../../data/step5_final_dataset/single_table/"
-output_dir = script_dir + "/../../data/step6_analysis_results/"
+import code.utils as utils
 
-INPUT_FILE = input_dir + 'mental_health_apps_flattened_cols.tsv'
-RESULTS_FILE = output_dir + f'ratings_analysis_t_test_results_{timestamp}.tsv'
+# --- Directory setup --- 
+INPUT_FILE = os.path.join(utils.get_data_dir(step=6), "single_table", "mental_health_apps_wide_format.tsv")
+OUTPUT_DIR = utils.get_out_dir()
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'ratings_analysis_t_test_results.tsv')
 
 if __name__ == "__main__":
 
@@ -39,9 +36,6 @@ if __name__ == "__main__":
     attribute_cols = {col: 'Feature' for col in feature_cols}
     attribute_cols.update({col: 'Indication' for col in indication_cols})
     attribute_cols.update({col: 'Demographic' for col in demographic_cols})
-
-
-    print(attribute_cols)
 
     ttest_results = []
 
@@ -81,13 +75,7 @@ if __name__ == "__main__":
 
     # Display the results with BH corrected p-values, sorted by corrected p-value
     results = results.sort_values(by='corrected_pvalue')
-    results.to_csv(RESULTS_FILE, sep='\t', index=None, float_format='%.15f')
-
-    # significant_results = results[results.corrected_pvalue < 0.1]
-    # significant_results.to_csv('results_nominal_significance.tsv', sep='\t', index=None, float_format='%.15f')
-
-    # significant_results = results[results.corrected_pvalue < 0.05]
-    # significant_results.to_csv('results_significance.tsv', sep='\t', index=None, float_format='%.15f')
+    results.to_csv(OUTPUT_FILE, sep='\t', index=None, float_format='%.15f')
 
 
     """## Do apps that target specific indications or demographics do better (or worse) than apps geared toward a general audience?"""

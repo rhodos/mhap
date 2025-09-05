@@ -8,25 +8,21 @@ WRITE_FLAT_FILE = True
 WRITE_STAR_SCHEMA_FILES = True
 REBUILD_DB = True
 
+if not (WRITE_FLAT_FILE or WRITE_STAR_SCHEMA_FILES or REBUILD_DB):
+    raise ValueError("At least one of WRITE_FLAT_FILE, WRITE_STAR_SCHEMA_FILES, or REBUILD_DB must be True")
+
 # --- Directory setup ---
-data_dir = utils.get_data_dir()
-input_dir = data_dir + "/step5_final_dataset/single_table/"
-
-TIMESTAMP = utils.get_timestamp()
-OUTPUT_DIR = data_dir + "/step5_final_dataset/"
-INPUT_FILE = input_dir + "mental_health_apps_from_sheets.tsv"
-
-SQL_FILE = OUTPUT_DIR + "sqlite/" + f"mhap_{TIMESTAMP}.db"
-FLAT_FILE = (
-    f"{OUTPUT_DIR}single_table/mental_health_apps_flattened_cols_{TIMESTAMP}.tsv"
-)
-
+INPUT_FILE = os.path.join(utils.get_data_dir(step=6), "single_table", "mental_health_apps.tsv")
+OUTPUT_DIR = utils.get_out_dir()
+SQL_FILE = os.path.join(OUTPUT_DIR, "mhap.db")
+FLAT_FILE = os.path.join(OUTPUT_DIR, "mental_health_apps_wide_format.tsv")
+STAR_DIR = os.path.join(OUTPUT_DIR, "star_schema")
+os.makedirs(STAR_DIR, exist_ok=True)
 
 def split_and_join_multilabels(df, column_name, suffix=""):
     df_split = df[column_name].str.get_dummies(sep=", ").astype(bool)
     df = df.join(df_split, rsuffix=suffix)
     return df
-
 
 def create_bridge_and_dim_tables(df, column_name):
 
@@ -162,49 +158,22 @@ if __name__ == "__main__":
         print("Writing flat file...")
         apps_wide = apps.copy(deep=True)
         apps_wide = split_and_join_multilabels(apps_wide, "features", suffix="_feature")
-        apps_wide = split_and_join_multilabels(
-            apps_wide, "indications", suffix="_indication"
-        )
-        apps_wide = split_and_join_multilabels(
-            apps_wide, "demographics", suffix="_demographic"
-        )
+        apps_wide = split_and_join_multilabels(apps_wide, "indications", suffix="_indication")
+        apps_wide = split_and_join_multilabels(apps_wide, "demographics", suffix="_demographic")
         apps_wide.to_csv(FLAT_FILE, sep="\t")
     else:
         print("Not writing flat file")
 
     apps.rename(columns={"id": "app_id"}, inplace=True)
-    columns_to_keep = [
-        "app_id",
-        "cluster",
-        "silhouette_score",
-        "auto_cluster_category",
-        "category",
-        "name",
-        "rating",
-        "company",
-        "url",
-        "description",
-        "downloads",
-        "updated",
-        "features",
-        "demographics",
-        "indications",
-    ]
+    columns_to_keep = ["app_id", "cluster", "silhouette_score", "auto_cluster_category", "category", "name", "rating", "company", "url", "description", "downloads", "updated", "features", "demographics", "indications"]
     apps = apps[columns_to_keep]
-
     apps.index = apps["app_id"]
 
     data = dict()
 
-    data["app_features"], data["features"] = create_bridge_and_dim_tables(
-        apps, "features"
-    )
-    data["app_indications"], data["indications"] = create_bridge_and_dim_tables(
-        apps, "indications"
-    )
-    data["app_demographics"], data["demographics"] = create_bridge_and_dim_tables(
-        apps, "demographics"
-    )
+    data["app_features"], data["features"] = create_bridge_and_dim_tables(apps, "features")
+    data["app_indications"], data["indications"] = create_bridge_and_dim_tables(apps, "indications")
+    data["app_demographics"], data["demographics"] = create_bridge_and_dim_tables(apps, "demographics")
 
     # Create category dim table
     all_categories = list(set(apps["category"]))
@@ -218,18 +187,7 @@ if __name__ == "__main__":
 
     # Add reference to Category_ID into main Apps table
     apps = apps.merge(category_dim, on="category", how="left")
-    apps.drop(
-        columns=[
-            "features",
-            "demographics",
-            "indications",
-            "cluster",
-            "silhouette_score",
-            "auto_cluster_category",
-            "category",
-        ],
-        inplace=True,
-    )
+    apps.drop(columns=["features", "demographics", "indications", "cluster", "silhouette_score", "auto_cluster_category", "category"], inplace=True,)
 
     data["apps"] = apps
 
@@ -237,7 +195,7 @@ if __name__ == "__main__":
         print("Writing star schema files...")
         for name, df in data.items():
             print(f"{name}: {df.shape}")
-            OUTFILE = f"{OUTPUT_DIR}star_schema/{name}_{TIMESTAMP}.tsv"
+            OUTFILE = os.path.join(STAR_DIR, f"{name}.tsv")
             df.to_csv(OUTFILE, sep="\t", index=False)
     else:
         print("Not writing star schema files")
