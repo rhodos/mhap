@@ -89,7 +89,7 @@ def prompt_model(prompt, max_tokens=10, device=device, verbose=True):
 if __name__ == "__main__":
 
     # Load the data
-    data_dir = utils.get_data_dir(3)
+    data_dir = utils.get_data_dir(step=3)
     data_file = os.path.join(data_dir, "validation_data.tsv")
 
     data = pd.read_csv(data_file, sep="\t")

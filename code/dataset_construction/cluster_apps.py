@@ -2,22 +2,20 @@ import pandas as pd
 import numpy as np
 import os
 import ast
-from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples
+import code.utils as utils 
 
 # Configuration
 NUMBER_OF_CLUSTERS = 50
 
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-script_dir = os.path.dirname(os.path.abspath(__file__))
-input_dir = script_dir + "/../../data/step3_llm_annotations/"
-output_dir = script_dir + "/../../data/step4_clustering_results/"
+INPUT_DIR = utils.get_data_dir(step=4) 
+OUTPUT_DIR = utils.get_out_dir()
 
-INPUT_FILE = input_dir + 'structured_data.tsv'
-OUTPUT_CLUSTER_FILE = output_dir + f'apps_clustered_{NUMBER_OF_CLUSTERS}_{timestamp}.tsv'
-OUTPUT_CLUSTER_INFO_FILE = output_dir + f'cluster_info_{NUMBER_OF_CLUSTERS}_{timestamp}.tsv'
+INPUT_FILE = os.path.join(INPUT_DIR, 'structured_labels.tsv')
+OUTPUT_CLUSTER_FILE = os.path.join(OUTPUT_DIR, 'apps_clustered.tsv')
+OUTPUT_CLUSTER_INFO_FILE = os.path.join(OUTPUT_DIR, 'cluster_info.tsv')
 
 
 def safe_literal_eval(x):
