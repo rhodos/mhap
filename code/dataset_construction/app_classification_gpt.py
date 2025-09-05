@@ -90,7 +90,7 @@ def label_data(data):
 
 if __name__ == "__main__":
 
-    data_dir = utils.get_data_dir(3)
+    data_dir = utils.get_data_dir(step=3)
     valid_file = os.path.join(data_dir, "validation_data.tsv")
 
     val_data = pd.read_csv(valid_file, sep="\t")

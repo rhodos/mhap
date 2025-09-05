@@ -1,23 +1,23 @@
 import pandas as pd
 import json
 import os
-from datetime import datetime
 from tqdm import tqdm
 from openai import OpenAI
+import code.utils as utils
 
 
 # ------------------- CONFIG -------------------
 MODEL_NAME = "gpt-4o-mini"
 BATCH_SIZE = 20
 
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-script_dir = os.path.dirname(os.path.abspath(__file__))
+DEBUG = True
 
-DATA_DIR = script_dir + "/../../data/step3_llm_annotations/"
-#INPUT_FILE = DATA_DIR + "validation_data.tsv"
-INPUT_FILE = DATA_DIR + "cleaned_labeled_data.tsv" 
-OUTPUT_FILE = DATA_DIR + f"structured_data_{timestamp}.tsv"
-OUTPUT_FILE_FOR_SHEETS = DATA_DIR + f"structured_data_for_sheets_{timestamp}.tsv"
+DATA_DIR = utils.get_data_dir(step=3)
+INPUT_FILE = os.path.join(DATA_DIR, "app_data_plus_ai_labels_cleaned.tsv") #"validation_data.tsv")
+
+OUT_DIR = utils.get_out_dir()
+OUTPUT_FILE = os.path.join(OUT_DIR, "structured_labels.tsv")
+OUTPUT_FILE_FOR_SHEETS = os.path.join(OUT_DIR, "structured_labels_for_google_sheets.tsv")
 
 if __name__ == "__main__":
 
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     """
 
     # ------------------- LOAD and preprocess DATA -------------------
-    if INPUT_FILE == DATA_DIR + "validation_data.tsv":
+    if INPUT_FILE == os.path.join(DATA_DIR, "validation_data.tsv"):
 
         df = pd.read_csv(INPUT_FILE, sep='\t')
 
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
         # reset index
         data.reset_index(drop=True, inplace=True)
-    elif INPUT_FILE == DATA_DIR + "cleaned_labeled_data.tsv" :
+    elif INPUT_FILE == os.path.join(DATA_DIR, "app_data_plus_ai_labels_cleaned.tsv"):
 
         df = pd.read_csv(INPUT_FILE, sep='\t')
         df.rename(columns={'Name': 'title', 'Description': 'description', 'ID': 'id', 'Cleaned Prediction': 'label', 'Features': 'manual_features', 'Target Demographic(s)': 'manual_demographics', 'Indications': 'manual_indications', 'Mental Health': 'manual_label'}, inplace=True)
@@ -118,8 +118,16 @@ if __name__ == "__main__":
         print(f'Subsetted data to {len(data)} rows labeled as Mental Health.')
 
         data.reset_index(drop=True, inplace=True)
+    else:
+        print('Unexpected input file. Exiting.')
+        exit()
 
     # ------------------- PROCESS IN BATCHES -------------------
+
+    if DEBUG:
+        print('Debug mode: sampling 25 data points')
+        data = data.sample(25, random_state=42).reset_index(drop=True)
+
     results = []
     batch_count = 0
     for start in tqdm(range(0, len(data), BATCH_SIZE)):
