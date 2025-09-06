@@ -10,14 +10,20 @@ from tqdm.auto import tqdm
 from openai import OpenAI
 import code.utils as utils
 
-gpt_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-model = "gpt-4.1-mini"
-DEBUG = True
+# ---------- Configuration ----------
+GPT_CLIENT = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+MODEL = "gpt-4.1-mini"
 
+DEBUG = True
 if DEBUG:
     print("WARNING: DEBUG mode is ON. Only a subset of data will be processed.")
 
+data_dir = utils.get_data_dir(step=3)
+VALID_FILE = os.path.join(data_dir, "validation_data.tsv")
+ALLDATA_FILE = os.path.join(data_dir, "app_data_plus_manual_labels.tsv")
+OUTPUT_FILE = os.path.join(utils.get_out_dir(), "app_data_plus_ai_labels.tsv")
 
+# ---------- Functions ----------
 def get_first_k_lines(text, k):
     """
     Returns the first k lines of the given text.
@@ -40,7 +46,7 @@ def construct_prompt(data_point):
     return prompt
 
 
-def prompt_model(prompt, model, verbose=True):
+def prompt_model(prompt, model=MODEL, verbose=True, gpt_client=GPT_CLIENT):
     """
     Prompts the model with the given prompt and returns the output text.
     """
@@ -76,7 +82,7 @@ def generate_metrics_and_predictions(data, verbose=True, debug=False):
         data_point = get_data_point(data, i)
         label = data_point["label"]
         prompt = construct_prompt(data_point)
-        output = prompt_model(prompt, model, verbose=False).strip()
+        output = prompt_model(prompt, model=MODEL, verbose=False).strip()
         if verbose:
             print("OUTPUT:", output)
         if verbose:
@@ -96,7 +102,7 @@ def generate_metrics_and_predictions(data, verbose=True, debug=False):
     return metrics, predictions
 
 
-def label_data(data):
+def label_data(data, model=MODEL):
     """
     Labels the given data using the model and returns the DataFrame with a new 'prediction' column.
     """
@@ -116,16 +122,12 @@ def label_data(data):
 
 if __name__ == "__main__":
 
-    data_dir = utils.get_data_dir(step=3)
-    valid_file = os.path.join(data_dir, "validation_data.tsv")
-
-    val_data = pd.read_csv(valid_file, sep="\t")
+    val_data = pd.read_csv(VALID_FILE, sep="\t")
     val_metrics, val_predictions = generate_metrics_and_predictions(
         val_data, verbose=True, debug=DEBUG)
     print(val_metrics)
 
-    input_file = os.path.join(data_dir, "app_data_plus_manual_labels.tsv")
-    data = pd.read_csv(input_file, sep="\t")
+    data = pd.read_csv(ALLDATA_FILE, sep="\t")
     data.rename(
         columns={
             "Mental Health": "label",
@@ -136,7 +138,7 @@ if __name__ == "__main__":
         inplace=True,
     )
 
-    # sample_data = data.sample(10)
+    # sample_data = data.sample(10, random_state=1)
     # labeled_sample = label_data(sample_data)
     # columns= ['title', 'description', 'label', 'prediction']
     # labeled_sample[columns]
@@ -154,6 +156,4 @@ if __name__ == "__main__":
 
     labeled_data["ID"] = range(1, len(labeled_data) + 1)
 
-    outdir = utils.get_out_dir()
-    outfile = os.path.join(outdir, "app_data_plus_ai_labels.tsv")
-    labeled_data.to_csv(outfile, sep="\t", header=True, index=False)
+    labeled_data.to_csv(OUTPUT_FILE, sep="\t", header=True, index=False)

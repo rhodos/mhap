@@ -7,7 +7,7 @@ import sqlite3
 import os
 import code.utils as utils
 
-# --- Configuration ---
+# ---------- Configuration ----------
 WRITE_FLAT_FILE = False
 WRITE_STAR_SCHEMA_FILES = False
 REBUILD_DB = False
@@ -15,7 +15,6 @@ REBUILD_DB = False
 if not (WRITE_FLAT_FILE or WRITE_STAR_SCHEMA_FILES or REBUILD_DB):
     raise ValueError("At least one of WRITE_FLAT_FILE, WRITE_STAR_SCHEMA_FILES, or REBUILD_DB must be True")
 
-# --- Directory setup ---
 INPUT_FILE = os.path.join(utils.get_data_dir(step=6), "single_table", "mental_health_apps.tsv")
 OUTPUT_DIR = utils.get_out_dir()
 SQL_FILE = os.path.join(OUTPUT_DIR, "mhap.db")
@@ -23,6 +22,7 @@ FLAT_FILE = os.path.join(OUTPUT_DIR, "mental_health_apps_wide_format.tsv")
 STAR_DIR = os.path.join(OUTPUT_DIR, "star_schema")
 os.makedirs(STAR_DIR, exist_ok=True)
 
+# ---------- Functions ----------
 def split_and_join_multilabels(df, column_name, suffix="", drop_original=False):
     """
     Splits a column with multi-label string values (comma-separated) into multiple boolean columns.

@@ -6,18 +6,40 @@ Classifies apps as Mental Health or Not Mental Health using a Hugging Face model
 import pandas as pd
 import numpy as np
 import os
-
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 from huggingface_hub import login
-
 import code.utils as utils
+
+# ---------- Configuration ----------
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {DEVICE}")
+
+DEBUG = True
+if DEBUG:
+    print("WARNING: DEBUG mode is ON. Only a subset of data will be processed.")
+
+DATA_FILE = os.path.join(utils.get_data_dir(step=3), "validation_data.tsv")
+
+# Log in to Hugging Face using the token from environment variables
+HF_TOKEN = os.environ.get("HF_TOKEN")
+if HF_TOKEN:
+    login(HF_TOKEN)
+    print("Successfully logged in to Hugging Face!")
+else:
+    print("HF_TOKEN secret is not set. Please add it to your environment variables.")
+
+# MODEL_NAME ='google/flan-t5-base'
+MODEL_NAME = "meta-llama/Llama-3.2-1B-Instruct"
+# MODEL_NAME = 'mistralai/Mistral-7B-v0.1'
+# MODEL_NAME = 'meta-llama/Llama-3.1-8B-Instruct'
 
 preamble = f"""
 You are a mental health app classifier. Your task is to categorize an app (based on its title and description) as either 'Mental Health' or 'Not Mental Health'. Apps involving talk therapy, coaching, mood tracking, or CBT training should be categorized as 'Mental Health'. You can also look for keywords and phrases like 'Cognitive Behavioral Therapy', 'Mental Well-Being', etc. as indicators that they should be labeled as 'Mental Health'.
 """
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+
+
+# ---------- Functions ----------
 
 def get_data_point(data, index):
     return dict(data.iloc[index])
@@ -67,7 +89,7 @@ def construct_prompt(
     """
     return prompt
 
-def prompt_model(prompt, max_tokens=10, device=device, verbose=True):
+def prompt_model(prompt, max_tokens=10, device=DEVICE, verbose=True):
     if verbose:
         print("PROMPT:\n", prompt)
     inputs = tokenizer(prompt, return_tensors="pt")
@@ -94,39 +116,25 @@ def prompt_model(prompt, max_tokens=10, device=device, verbose=True):
 if __name__ == "__main__":
 
     # Load the data
-    data_dir = utils.get_data_dir(step=3)
-    data_file = os.path.join(data_dir, "validation_data.tsv")
-
-    data = pd.read_csv(data_file, sep="\t")
+    data = pd.read_csv(DATA_FILE, sep="\t")
     data = data[["title", "description", "label"]]
 
     # Extract 30 samples to use as test data, 4 for in-context examples
-    sampled_data = data.sample(34)
+    sampled_data = data.sample(34, random_state=1).reset_index(drop=True)
     test_data = sampled_data[:30]
     example_data = sampled_data[30:]
     print(test_data["label"].value_counts())
     print(example_data["label"].value_counts())
 
-    # Log in to Hugging Face using the token from environment variables
-    HF_TOKEN = os.environ.get("HF_TOKEN")
-    if HF_TOKEN:
-        login(HF_TOKEN)
-        print("Successfully logged in to Hugging Face!")
-    else:
-        print("HF_TOKEN secret is not set. Please add it to your environment variables.")
+    model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype=torch.bfloat16)
+    # model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME, torch_dtype=torch.bfloat16)
 
-    # model_name='google/flan-t5-base'
-    model_name = "meta-llama/Llama-3.2-1B-Instruct"
-    # model_name = 'mistralai/Mistral-7B-v0.1'
-    # model_name = 'meta-llama/Llama-3.1-8B-Instruct'
-    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16)
-    # model = AutoModelForSeq2SeqLM.from_pretrained(model_name, torch_dtype=torch.bfloat16)
-
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
     # Move the model to the GPU if available 
-    model.to(device)
+    model.to(DEVICE)
 
+    # Just test that model is responsive
     output = prompt_model("Hello, how are you?", max_tokens=5, verbose=True)
     print("OUTPUT:", output)
 
@@ -134,7 +142,12 @@ if __name__ == "__main__":
     outputs = []
     labels = []
     is_correct = []
-    for i in range(3):  # range(len(test_data)):
+
+    if DEBUG:
+        print('Debug mode: running only first 3 data points')
+        test_data = test_data.head(3)
+
+    for i in range(len(test_data)):
         print("DATA POINT ", i)
         data_point = get_data_point(test_data, i)
         label = data_point["label"]

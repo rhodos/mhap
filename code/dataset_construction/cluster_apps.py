@@ -12,7 +12,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples
 import code.utils as utils 
 
-# Configuration
+# ---------- Configuration ----------
 NUMBER_OF_CLUSTERS = 50
 
 INPUT_DIR = utils.get_data_dir(step=4) 
@@ -22,7 +22,7 @@ INPUT_FILE = os.path.join(INPUT_DIR, 'structured_labels.tsv')
 OUTPUT_CLUSTER_FILE = os.path.join(OUTPUT_DIR, 'apps_clustered.tsv')
 OUTPUT_CLUSTER_INFO_FILE = os.path.join(OUTPUT_DIR, 'cluster_info.tsv')
 
-
+# ---------- Functions ----------
 def safe_literal_eval(x):
     """
     Safely evaluates a string representation of a Python literal (like a list).
