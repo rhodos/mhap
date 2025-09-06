@@ -10,11 +10,11 @@ from statsmodels.sandbox.stats.multicomp import multipletests
 import code.utils as utils
 
 # ---------- Configuration ----------
-INPUT_FILE = os.path.join(utils.get_data_dir(step=6), "single_table", "mental_health_apps_wide_format.tsv")
+INPUT_FILE = os.path.join(utils.get_data_dir(step=6), 'single_table', 'mental_health_apps_wide_format.tsv')
 OUTPUT_DIR = utils.get_out_dir()
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'ratings_analysis_t_test_results.tsv')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     apps = pd.read_csv(INPUT_FILE, sep='\t')
 
@@ -100,5 +100,5 @@ if __name__ == "__main__":
     general_demographic = apps[apps.demographics == 'General']['rating'].dropna()
 
     ttest_result = stats.ttest_ind(specific_demographic, general_demographic, equal_var=False) # Welch's t-test
-    print('Specific vs General Demographic Ratings T-test Result:')
+    print("Specific vs General Demographic Ratings T-test Result:")
     print(ttest_result)

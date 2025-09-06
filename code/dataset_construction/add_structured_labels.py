@@ -12,7 +12,7 @@ import code.utils as utils
 
 
 # ------------------- CONFIG -------------------
-MODEL_NAME = "gpt-4o-mini"
+MODEL_NAME = 'gpt-4o-mini'
 BATCH_SIZE = 20
 
 DEBUG = True
@@ -20,13 +20,13 @@ if DEBUG:
     print("WARNING: DEBUG mode is ON. Only a subset of data will be processed.")
 
 DATA_DIR = utils.get_data_dir(step=3)
-INPUT_FILE = os.path.join(DATA_DIR, "app_data_plus_ai_labels_cleaned.tsv") #"validation_data.tsv")
+INPUT_FILE = os.path.join(DATA_DIR, 'app_data_plus_ai_labels_cleaned.tsv') #'validation_data.tsv')
 
 OUT_DIR = utils.get_out_dir()
-OUTPUT_FILE = os.path.join(OUT_DIR, "structured_labels.tsv")
-OUTPUT_FILE_FOR_SHEETS = os.path.join(OUT_DIR, "structured_labels_for_google_sheets.tsv")
+OUTPUT_FILE = os.path.join(OUT_DIR, 'structured_labels.tsv')
+OUTPUT_FILE_FOR_SHEETS = os.path.join(OUT_DIR, 'structured_labels_for_google_sheets.tsv')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     # ------------------- SETUP -------------------
     client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     """
 
     # ------------------- LOAD and preprocess DATA -------------------
-    if INPUT_FILE == os.path.join(DATA_DIR, "validation_data.tsv"):
+    if INPUT_FILE == os.path.join(DATA_DIR, 'validation_data.tsv'):
 
         df = pd.read_csv(INPUT_FILE, sep='\t')
 
@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
         # reset index
         data.reset_index(drop=True, inplace=True)
-    elif INPUT_FILE == os.path.join(DATA_DIR, "app_data_plus_ai_labels_cleaned.tsv"):
+    elif INPUT_FILE == os.path.join(DATA_DIR, 'app_data_plus_ai_labels_cleaned.tsv'):
 
         df = pd.read_csv(INPUT_FILE, sep='\t')
         df.rename(columns={'Name': 'title', 'Description': 'description', 'ID': 'id', 'Cleaned Prediction': 'label', 'Features': 'manual_features', 'Target Demographic(s)': 'manual_demographics', 'Indications': 'manual_indications', 'Mental Health': 'manual_label'}, inplace=True)
@@ -152,11 +152,11 @@ if __name__ == "__main__":
         response = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[
-                {"role": "system", "content": CLASSIFICATION_RULES},
-                {"role": "user", "content": batch_text}
+                {'role': 'system', 'content': CLASSIFICATION_RULES},
+                {'role': 'user', 'content': batch_text}
             ],
             temperature=0,
-            response_format={"type": "json_object"}
+            response_format={'type': 'json_object'}
         )
 
         # Parse JSON safely
@@ -170,7 +170,7 @@ if __name__ == "__main__":
 
     # Merge results back into DataFrame
     results_df = pd.DataFrame(results)
-    df_final = data.merge(results_df, on="id", how="left")
+    df_final = data.merge(results_df, on='id', how='left')
 
     # Save version for Python analysis
     df_final.to_csv(OUTPUT_FILE, sep='\t', index=False)

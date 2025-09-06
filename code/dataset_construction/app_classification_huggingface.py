@@ -12,25 +12,25 @@ from huggingface_hub import login
 import code.utils as utils
 
 # ---------- Configuration ----------
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {DEVICE}")
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f'Using device: {DEVICE}')
 
 DEBUG = True
 if DEBUG:
-    print("WARNING: DEBUG mode is ON. Only a subset of data will be processed.")
+    print('WARNING: DEBUG mode is ON. Only a subset of data will be processed.')
 
-DATA_FILE = os.path.join(utils.get_data_dir(step=3), "validation_data.tsv")
+DATA_FILE = os.path.join(utils.get_data_dir(step=3), 'validation_data.tsv')
 
 # Log in to Hugging Face using the token from environment variables
-HF_TOKEN = os.environ.get("HF_TOKEN")
+HF_TOKEN = os.environ.get('HF_TOKEN')
 if HF_TOKEN:
     login(HF_TOKEN)
-    print("Successfully logged in to Hugging Face!")
+    print('Successfully logged in to Hugging Face!')
 else:
-    print("HF_TOKEN secret is not set. Please add it to your environment variables.")
+    print('HF_TOKEN secret is not set. Please add it to your environment variables.')
 
 # MODEL_NAME ='google/flan-t5-base'
-MODEL_NAME = "meta-llama/Llama-3.2-1B-Instruct"
+MODEL_NAME = 'meta-llama/Llama-3.2-1B-Instruct'
 # MODEL_NAME = 'mistralai/Mistral-7B-v0.1'
 # MODEL_NAME = 'meta-llama/Llama-3.1-8B-Instruct'
 
@@ -45,14 +45,14 @@ def get_data_point(data, index):
     return dict(data.iloc[index])
 
 def get_first_k_lines(text, k):
-    lines = text.split("\n")
-    return " ".join(lines[:k])
+    lines = text.split('\n')
+    return ' '.join(lines[:k])
 
 def construct_example_for_prompt(example_data, i):
     data_point = get_data_point(example_data, i)
-    title = data_point["title"]
-    description = get_first_k_lines(data_point["description"], k=4)
-    category = data_point["label"]
+    title = data_point['title']
+    description = get_first_k_lines(data_point['description'], k=4)
+    category = data_point['label']
     prompt = f"""
   EXAMPLE {i+1}:
     INPUT: {title}: {description}
@@ -69,9 +69,9 @@ def generate_example_i(example_data, i):
 def construct_prompt(
     data_point, example_data, preamble=preamble, num_examples=4, max_tokens=300
 ):
-    title = data_point["title"]
-    description = get_first_k_lines(data_point["description"], k=4)
-    example_str = "\n".join(
+    title = data_point['title']
+    description = get_first_k_lines(data_point['description'], k=4)
+    example_str = '\n'.join(
         [construct_example_for_prompt(example_data, i) for i in range(num_examples)]
     )
 
@@ -91,11 +91,11 @@ def construct_prompt(
 
 def prompt_model(prompt, max_tokens=10, device=DEVICE, verbose=True):
     if verbose:
-        print("PROMPT:\n", prompt)
-    inputs = tokenizer(prompt, return_tensors="pt")
+        print('PROMPT:\n', prompt)
+    inputs = tokenizer(prompt, return_tensors='pt')
 
     if verbose:
-        print("LENGTH OF INPUT:", len(inputs["input_ids"][0]))
+        print('LENGTH OF INPUT:', len(inputs['input_ids'][0]))
 
     # move input tensors to GPU
     inputs = {key: value.to(device) for key, value in inputs.items()}
@@ -106,25 +106,25 @@ def prompt_model(prompt, max_tokens=10, device=DEVICE, verbose=True):
 
     # Decode only the newly generated tokens
     output = tokenizer.decode(
-        encoded_output[0][len(inputs["input_ids"][0]) :], skip_special_tokens=True
+        encoded_output[0][len(inputs['input_ids'][0]) :], skip_special_tokens=True
     )
 
     if verbose:
-        print("MODEL:\n", output)
+        print('MODEL:\n', output)
     return output
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     # Load the data
-    data = pd.read_csv(DATA_FILE, sep="\t")
-    data = data[["title", "description", "label"]]
+    data = pd.read_csv(DATA_FILE, sep='\t')
+    data = data[['title', 'description', 'label']]
 
     # Extract 30 samples to use as test data, 4 for in-context examples
     sampled_data = data.sample(34, random_state=1).reset_index(drop=True)
     test_data = sampled_data[:30]
     example_data = sampled_data[30:]
-    print(test_data["label"].value_counts())
-    print(example_data["label"].value_counts())
+    print(test_data['label'].value_counts())
+    print(example_data['label'].value_counts())
 
     model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype=torch.bfloat16)
     # model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME, torch_dtype=torch.bfloat16)
@@ -135,8 +135,8 @@ if __name__ == "__main__":
     model.to(DEVICE)
 
     # Just test that model is responsive
-    output = prompt_model("Hello, how are you?", max_tokens=5, verbose=True)
-    print("OUTPUT:", output)
+    output = prompt_model('Hello, how are you?', max_tokens=5, verbose=True)
+    print('OUTPUT:', output)
 
     max_tokens = 300
     outputs = []
@@ -148,14 +148,14 @@ if __name__ == "__main__":
         test_data = test_data.head(3)
 
     for i in range(len(test_data)):
-        print("DATA POINT ", i)
+        print('DATA POINT ', i)
         data_point = get_data_point(test_data, i)
-        label = data_point["label"]
+        label = data_point['label']
         prompt = construct_prompt(data_point, example_data, max_tokens=max_tokens)
         output = prompt_model(prompt, max_tokens=max_tokens, verbose=False).strip()
-        print("OUTPUT:", output)
-        print("TRUE LABEL:", label)
+        print('OUTPUT:', output)
+        print('TRUE LABEL:', label)
         outputs.append(output)
         labels.append(label)
         is_correct.append(output == label)
-        print("\n\n")
+        print('\n\n')

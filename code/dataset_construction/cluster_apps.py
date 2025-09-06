@@ -72,7 +72,7 @@ def get_top_items(item_counts: dict, n: int = 5) -> list:
     sorted_items = sorted(item_counts.items(), key=lambda item: item[1], reverse=True)
     return sorted_items[:n]
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     # Load the data
     df = pd.read_csv(INPUT_FILE, sep='\t')
@@ -102,9 +102,9 @@ if __name__ == "__main__":
 
     # plt.figure(figsize=(10, 6))
     # plt.plot(range_n_clusters, silhouette_scores)
-    # plt.xlabel("Number of Clusters")
-    # plt.ylabel("Average Silhouette Score")
-    # plt.title("Silhouette Scores vs. Number of Clusters")
+    # plt.xlabel('Number of Clusters')
+    # plt.ylabel('Average Silhouette Score')
+    # plt.title('Silhouette Scores vs. Number of Clusters')
     # plt.show()
 
     # Apply K-Means clustering
@@ -144,7 +144,7 @@ if __name__ == "__main__":
             cluster_silhouette_score = cluster_silhouette_scores[i]
 
             # App names
-            app_names = ", ".join(cluster_df.title)
+            app_names = ', '.join(cluster_df.title)
 
             # Top terms in the cluster
             cluster_tfidf_matrix = tfidf_matrix[cluster_df.index]
@@ -163,7 +163,7 @@ if __name__ == "__main__":
             cluster_info.loc[i] = [cluster_num, n_apps, cumulative_app_count,cluster_silhouette_score, app_names, term_scores_dict, features_counts, indication_counts, demographic_counts]
 
         else:
-            print("Cluster is empty.")
+            print('Cluster is empty.')
 
     # Save the app clusters
     columns = ['id', 'title', 'Cluster', 'Cluster_Silhouette_Score']

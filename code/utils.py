@@ -1,8 +1,9 @@
 import os
 from dotenv import load_dotenv
+from typing import Optional
 
 
-def get_base_dir():
+def get_base_dir() -> Optional[str]:
     """
     Returns the base directory from the BASE_DIR environment variable.
     If BASE_DIR is not set in environment variables, returns None.
@@ -13,7 +14,7 @@ def get_base_dir():
         print("WARNING: BASE_DIR not set in environment variables, returning None for base_dir")
     return base_dir
 
-def get_data_dir(step=None):
+def get_data_dir(step: int = None) -> Optional[str]:
     """
     Returns the base data directory, or a subdirectory for a given step (1-7).
     Example: get_data_dir(3) -> ../data/step3_app_classification
@@ -26,7 +27,7 @@ def get_data_dir(step=None):
         print("WARNING: BASE_DIR not set in environment variables, returning None for base_data_dir")
         base_data_dir = None
     if step is not None:
-        if str(step) not in {'1','2','3','4','5','6', '7'}:
+        if str(step) not in {'1','2','3','4','5','6','7'}:
             raise ValueError("step must be an integer 1 through 7")
         step_map = {
             '1': 'step1_prompts_and_keywords',
@@ -42,7 +43,7 @@ def get_data_dir(step=None):
         data_dir = base_data_dir
     return data_dir
 
-def get_out_dir():
+def get_out_dir() -> Optional[str]:
     """
     Returns the output directory inside the data directory, creating it if necessary.
     """
