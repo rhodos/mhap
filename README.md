@@ -1,6 +1,12 @@
 # mhap
 MHAP stands for Mental Health App Profiler. It includes code to extract and analyze information about mental health-related apps. 
 
+To read more about the project, see the following two-part series on Medium:
+
+[Part 1: How I Built a Dataset of Mental Health Apps Using LLMs, Web Scrapers and $2](https://medium.com/@rachelhodos/how-i-built-a-dataset-of-mental-health-apps-using-llms-web-scrapers-and-2-adb5bc4a5ed5)
+
+[Part 2: What 1,000 Apps Reveal About the Digital Mental Health Landscape](https://medium.com/@rachelhodos/what-1-000-apps-reveal-about-the-digital-mental-health-landscape-1d6fe4297acd)
+
 To setup your environment to run the code, you must do the following:
 * Change BASE_DIR in .env file to point to your project directory.
 * Add the mhap/code directory to your PYTHONPATH, e.g. by adding the following to your .bashrc or .zshrc file (be sure to replace the path with your own):
